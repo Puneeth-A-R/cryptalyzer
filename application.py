@@ -150,8 +150,6 @@ def history():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-    pwd = generate_password_hash("123")
-    print(pwd)
     # Forget any user_id
     session.clear()
 
