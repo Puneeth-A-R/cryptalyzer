@@ -5,31 +5,35 @@
 {% endblock %}
 
 {% block main %}
-    <table class="current">
-        <thead class="head">
+    <table class="table">
+        <thead class="thead-dark">
             <tr>
-                <th>Symbol</th>
-                <th>Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>TOTAL</th>
+            <th>Symbol</th>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Prediction</th>
+            <th>TOTAL</th>
             </tr>
         </thead>
+
         <tfoot>
             <tr>
-                <td colspan="4"></td>
+                <td colspan="5"></td>
                 <td>{{ total | usd}}</td>
             </tr>
         </tfoot>
+
         <tbody>
             {% for row in rows %}
-                <tr>
-                    <td>{{ row.symbol }}</td>
-                    <td>{{ row.name }}</td>
-                    <td>{{ row.sum_of_quantity }}</td>
-                    <td>{{ row.price }}</td>
-                    <td>{{ row.total | usd}}</td>
-                </tr>
+            <tr>
+                <td>{{ row.symbol }}</td>
+                <td>{{ row.name }}</td>
+                <td>{{ row.sum_of_quantity }}</td>
+                <td>{{ row.price }}</td>
+                <td>{{ row.price + (0.15*row.price) }}</td>
+                <td>{{ row.total | usd}}</td>
+            </tr>
             {% endfor %}
             <tr>
                 <td colspan="4"><b>CASH</b></td>
@@ -37,4 +41,6 @@
             </tr>
         </tbody>
     </table>
+
+
 {% endblock %}
