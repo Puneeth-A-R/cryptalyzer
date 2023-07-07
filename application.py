@@ -83,25 +83,31 @@ def buy():
 
         # Ensure symbol and quantity are entered
         if not (request.form.get("Symbol") and request.form.get("Quantity")):
-            return apology("Missing value", 403)
+            flash("Missing value!")
+            return render_template("buy.html")
+            #return apology("Missing value", 403)
 
         # Ensure quantity are not fractional, negative, and non-numeric
         temp = request.form.get("Quantity").isdigit()
         try:
             quantity = int(temp)
             if quantity < 1:
-                return apology("Invalid", 400)
+                flash("Invalid value")
+                return render_template("buy.html")
+                #return apology("Invalid", 400)
         except ValueError:
             return apology("Invalid", 400)
 
         # Ensure symbol is valid and convert symbol to full name
         a = request.form.get("Symbol")
         check_symbol = lookup(a)
+        if not check_symbol:
+            flash("Invalid symbol! Please try again with a valid symbol")
+            return render_template("buy.html")
+            #return apology("Invalid", 400)
         coinname = cryptocoins[a.upper()]
         if a.upper() not in cryptocoins:
             coinname = a.upper()
-        if not check_symbol:
-            return apology("Invalid", 400)
 
         current_id = session["user_id"]
         current_cash = db.execute("SELECT cash FROM users WHERE id = ?", current_id)
@@ -109,12 +115,14 @@ def buy():
         returned_price = lookup(symb)
         qty = request.form.get("Quantity")
         amount_requested = int(qty) * returned_price["price"]
-        print(amount_requested)
+        #print(amount_requested)
         reduced_cash = int(current_cash[0]["cash"]) - amount_requested
 
         # Ensure user has sufficient funds before purchase
         if (current_cash[0]["cash"] < amount_requested):
-            return apology("No sufficient funds", 403)
+            flash("No sufficient funds!")
+            return render_template("buy.html")
+            #return apology("No sufficient funds", 403)
 
         # Go ahead and buy the coins
         else:
@@ -142,7 +150,8 @@ def history():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
-
+    pwd = generate_password_hash("123")
+    print(pwd)
     # Forget any user_id
     session.clear()
 
@@ -151,18 +160,24 @@ def login():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash("Please enter an username")
+            return render_template("login.html")
+            #return apology("must provide username", 403)
 
         # Ensure password was submitted
         elif not request.form.get("password"):
-            return apology("must provide password", 403)
+            flash("Please enter your password")
+            return render_template("login.html")
+            #return apology("must provide password", 403)
 
         # Query database for username
         rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
 
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
-            return apology("invalid username and/or password", 403)
+            flash("Invalid username or password")
+            return render_template("login.html")
+            #return apology("invalid username and/or password", 403)
 
         # Remember which user has logged in
         session["user_id"] = rows[0]["id"]
@@ -192,11 +207,15 @@ def quote():
     """Get stock quote."""
     if request.method == "POST":
         if not request.form.get("Symbol"):
-            return apology("Enter a symbol", 400)
+            flash("Enter a symbol")
+            return render_template("quoted.html")
+            #return apology("Enter a symbol", 400)
         symb = request.form.get("Symbol")
         returned_symbol = lookup(symb)
         if not returned_symbol:
-            return apology("Invalid", 400)
+            flash("Invalid symbol")
+            return render_template("quoted.html")
+            #return apology("Invalid", 400)
         else:
             return render_template("quote.html", returned_symbol=returned_symbol)
     else:
@@ -208,24 +227,34 @@ def register():
     """Register user"""
     if request.method == "POST":
         if not request.form.get("username"):
-            return apology("must provide username", 400)
+            flash("Please enter an username")
+            return render_template("register.html")
+            #return apology("must provide username", 400)
 
         # Ensure password was submitted
         if not request.form.get("password"):
-            return apology("must provide password", 400)
+            flash("Please enter a password")
+            return render_template("register.html")
+            #return apology("must provide password", 400)
 
         # Ensure password is re-entered
         if not request.form.get("confirmation"):
-            return apology("must re-enter password", 400)
+            flash("Please re-enter your password")
+            return render_template("register.html")
+            #return apology("must re-enter password", 400)
 
         if (request.form.get("password")) != (request.form.get("confirmation")):
-            return apology("passwords don't match", 400)
+            flash("Passwords don't match!")
+            return render_template("register.html")
+            #return apology("passwords don't match", 400)
 
         # Check if username is already taken
         new_username = (request.form.get("username"))
         duplicate_names = db.execute("SELECT * FROM users WHERE username = ?", new_username)
         if len(duplicate_names) != 0:
-            return apology("Username taken", 400)
+            flash("Username already taken!")
+            return render_template("register.html")
+            #return apology("Username taken", 400)
 
         # Add user to database
         else:
@@ -238,6 +267,7 @@ def register():
         return redirect("/")
 
     else:
+        flash("You've registered successsfully! Login")
         return render_template("register.html")
 
 
@@ -262,16 +292,22 @@ def sell():
 
     if request.method == "POST":
         if not request.form.get("Symbol"):
-            return apology("Invalid", 400)
+            flash("Invalid symbol")
+            return render_template("sell.html")
+            #return apology("Invalid", 400)
 
         if not request.form.get("Quantity"):
-            return apology("Invalid", 400)
+            flash("Invalid quantity")
+            return render_template("sell.html")
+            #return apology("Invalid", 400)
 
         quantity = request.form.get("Quantity")
         try:
             quantity = int(quantity)
             if quantity < 1:
-                return apology("Invalid", 400)
+                flash("Invalid quantity")
+                return render_template("sell.html")
+                #return apology("Invalid", 400)
         except ValueError:
             return apology("Invalid", 400)
 
@@ -279,7 +315,9 @@ def sell():
 
         symbols_dict = {element['symbol']: element['sum_of_quantity'] for element in owned_symbols}
         if symbols_dict[symbol] < int(quantity):
-            return apology("You don't own so many coins", 400)
+            flash("You don't own so many coins")
+            return render_template("sell.html")
+            #return apology("You don't own so many coins", 400)
 
         ongoing_price = lookup(symbol)
 
@@ -308,30 +346,42 @@ def change_password():
 
         # Ensure username was submitted
         if not request.form.get("username"):
-            return apology("must provide username", 403)
+            flash("Must provide username")
+            return render_template("change-password.html")
+            #return apology("must provide username", 403)
 
         # Ensure old password was submitted
         elif not request.form.get("old-password"):
-            return apology("must provide old password", 403)
+            flash("Must provide old password")
+            return render_template("change-password.html")
+            #return apology("must provide old password", 403)
 
         # Ensure new password 1 was submitted
         elif not request.form.get("new-password1"):
-            return apology("must provide new password", 403)
+            flash("Must provide new password")
+            return render_template("change-password.html")
+            #return apology("must provide new password", 403)
 
         # Ensure new password 2 was submitted
         elif not request.form.get("new-password2"):
-            return apology("must re-enter new password", 403)
+            flash("Must re-enter new password")
+            return render_template("change-password.html")
+            #return apology("must re-enter new password", 403)
 
         # Check if both new passwords match
         elif (request.form.get("password1")) != (request.form.get("password2")):
-            return apology("New passwords don't match", 403)
+            flash("New passwords don't match")
+            return render_template("change-password.html")
+            #return apology("New passwords don't match", 403)
 
         # Check username & old password against database
         usn = (request.form.get("username"))
         pwd = generate_password_hash(request.form.get("old-password"))
         user = db.execute("SELECT * FROM users WHERE username = ?", usn)
         if len(user) != 1 or not check_password_hash(user[0]["hash"], request.form.get("old-password")):
-            return apology("invalid username and/or password", 403)
+            flash("Invalid username or password")
+            return render_template("change-password.html")
+            #return apology("invalid username and/or password", 403)
 
         # Change password
         else:
@@ -339,7 +389,7 @@ def change_password():
             new_pwd = generate_password_hash(request.form.get("new-password2"))
             db.execute("UPDATE users SET hash = ? WHERE username = ?", new_pwd, usn)
             flash("Your password changed was changed successfully!")
-            return render_template("index.html")
+            return render_template("change-password.html")
     else:
         return render_template("change-password.html")
 
