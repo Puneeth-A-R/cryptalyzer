@@ -44,7 +44,7 @@ def lookup(symbol):
         #url = f"https://cloud.iexapis.com/stable/stock/{urllib.parse.quote_plus(symbol)}/quote?token={api_key}"
         symb = symbol.upper()
         url = f'https://rest.coinapi.io/v1/exchangerate/{urllib.parse.quote_plus(symb)}/USD'
-        headers = {'X-CoinAPI-Key' : 'E4A80ADB-1E8C-4823-A5DB-B522D7074CCC'}
+        headers = {'X-CoinAPI-Key' : '972A2913-B7CE-43C0-A922-1B6501031804'}
         response = requests.get(url, headers=headers)
         #response = requests.get(url)
         response.raise_for_status()
